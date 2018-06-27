@@ -22,62 +22,89 @@ public class SEButtonListener implements GpioPinListenerDigital {
     private final GpioPinDigitalOutput ButtonLED;
     /*    カードジャンル(起承結)    */
     private final String fileName;
+    /*    各SEのディレクトリ    */
     private final String startDir = "start/start";
-    private final String eventDir = "event/event";
+    private final String eventDir = "event/";
     private final String endDir = "end/end";
 
-    public SEButtonListener(GpioPinDigitalOutput ButtonLED, int SEGenre) {
+    public SEButtonListener(GpioPinDigitalOutput ButtonLED, int BGMNum) {
         this.ButtonLED = ButtonLED;
-        this.fileName = SelectRandomSE(SEGenre);
+        this.fileName = SelectRandomSE(BGMNum);
+
+        /*    該当ボタンのLEDを点灯    */
+        ButtonLED.high();
+        System.out.println("ファイル名:" + this.fileName);
     }
 
     @Override
     public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent gpdsce) {
-        Speaker speaker = new Speaker();
-
-        /*    該当ボタンのLEDを点灯    */
-        ButtonLED.high();
 
         try {
+
             if (gpdsce.getState() == PinState.LOW) {
+                System.out.println("押されたピン:" + gpdsce.getPin());
+                Speaker speaker = new Speaker();
                 /*    LED消灯    */
-                ButtonLED.toggle();
+                ButtonLED.low();
                 /*    ジャンルの音声をランダムに1つ選択    */
                 speaker.openFile(this.fileName);
                 speaker.playSE();
                 speaker.stopSE();
+
+            } else {
+                ButtonLED.high();
             }
+
         } catch (Exception e) {
         }
     }
 
-    private String SelectRandomSE(final int SEGenre) {
-        String fileName = null;
+    /*    BGM番号でカードの種類を判別し、ランダムでSEを１つ選択    */
+    private String SelectRandomSE(final int BGMNum) {
+        /*    ランダムで選択されたSEファイル名    */
+        String selectFile = null;
 
         Random random = new Random();
-        /*    Random.nextInt(範囲) + 1をすると １～範囲 の数値が返ってくる    */
+        /*    Random.nextInt(範囲) + 1をすると １~範囲 の数値が返ってくる    */
         int SENum = random.nextInt(3) + 1;
 
-        switch (SEGenre) {
+        /*    BGM番号
+                 0~2 : start
+                 3~11 : event
+                 12~14 : end
+         */
+        switch (BGMNum) {
             /*    startカード    */
             case 0:
+            case 1:
+            case 2:
                 /*    1:cave 2:bluesky 3:snow*/
-                fileName = startDir + SENum + ".wav";
+                selectFile = startDir + SENum + ".wav";
                 break;
 
             /*    eventカード    */
-            case 1:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
                 /*    1:unique 2:magic 3:ghost*/
-                fileName = eventDir + SENum + ".wav";
+                selectFile = eventDir + SENum + ".wav";
                 break;
 
             /*    endカード    */
-            case 2:
+            case 12:
+            case 13:
+            case 14:
                 /*    1:happy 2:normal 3:bad    */
-                fileName = endDir + SENum + ".wav";
+                selectFile = endDir + SENum + ".wav";
                 break;
         }
 
-        return fileName;
+        return selectFile;
     }
 }
